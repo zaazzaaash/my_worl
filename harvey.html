@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Catalog & Playlist Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --dark-color: #2d3436;
+            --light-color: #f5f6fa;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+            --danger-color: #d63031;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-color);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .song-card {
+            background: linear-gradient(to bottom right, white, #f1f3ff);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 8px;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .search-box {
+            border-radius: 50px;
+            border: 2px solid var(--secondary-color);
+            padding: 10px 20px;
+        }
+        
+        .search-box:focus {
+            box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+            border-color: var(--primary-color);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .progress-bar {
+            background-color: var(--primary-color);
+        }
+        
+        .playlist-count {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .section-title {
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+            margin: 30px 0 20px;
+            color: var(--dark-color);
+        }
+        
+        .user-profile {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .badge-primary {
+            background-color: var(--primary-color);
+        }
+        
+        .tab-content {
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 8px 8px 0 0;
+            padding: 12px 25px;
+            color: var(--dark-color);
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .song-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: var(--light-color);
+            transition: all 0.3s ease;
+        }
+        
+        .song-item:hover {
+            background: #e9e9ff;
+            transform: translateX(5px);
+        }
+        
+        footer {
+            background: var(--dark-color);
+            color: white;
+            padding: 30px 0;
+            margin-top: 50px;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-music me-2"></i>MelodyMingle
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-search me-1"></i> Discover</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-fire me-1"></i> Popular</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="text-white me-3">Hello, harvey!</span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> My Account
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Notification Area -->
+    <div class="notification alert alert-warning alert-dismissible fade" role="alert">
+        <div class="d-flex">
+            <div class="me-3"><i class="fas fa-exclamation-circle fa-2x"></i></div>
+            <div>
+                <h5 class="alert-heading">Duplicate Song</h5>
+                <p class="mb-0">This song is already in your playlist.</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="progress mt-2" style="height: 3px;">
+            <div class="progress-bar" role="progressbar" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <!-- Search Section -->
+        <div class="row mb-4">
+            <div class="col-md-8 mx-auto">
+                <div class="input-group">
+                    <input type="text" class="form-control search-box" placeholder="Search songs by title or artist..." aria-label="Search songs">
+                    <button class="btn btn-primary" type="button">
+                        <i class="fas fa-search me-1"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="songs-tab" data-bs-toggle="tab" data-bs-target="#songs" type="button" role="tab">
+                    <i class="fas fa-music me-2"></i>Song Catalog
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="playlist-tab" data-bs-toggle="tab" data-bs-target="#playlist" type="button" role="tab">
+                    <i class="fas fa-list me-2"></i>My Playlist <span class="badge bg-primary rounded-pill">5/10</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+                    <i class="fas fa-user me-2"></i>Profile
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tabs Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Song Catalog Tab -->
+            <div class="tab-pane fade show active" id="songs" role="tabpanel">
+                <h3 class="section-title">Popular Songs</h3>
+                <div class="row">
+                    <!-- Song Cards -->
+                    <div class="col-md-4">
+                        <div class="card song-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-success">Popular</span>
+                                    <span class="playlist-count"><i class="fas fa-headphones me-1"></i> 245</span>
+                                </div>
+                                <h5 class="card-title">Blinding Lights</h5>
+                                <h6 class="card-subtitle mb-3 text-muted">The Weeknd</h6>
+                                <p class="card-text text-muted">After Hours • 2020</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-clock me-1 text-muted"></i>
+                                        <span class="text-muted">3:20</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i> Add to Playlist
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card song-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-warning text-dark">Trending</span>
+                                    <span class="playlist-count"><i class="fas fa-headphones me-1"></i> 189</span>
+                                </div>
+                                <h5 class="card-title">Flowers</h5>
+                                <h6 class="card-subtitle mb-3 text-muted">Miley Cyrus</h6>
+                                <p class="card-text text-muted">Endless Summer Vacation • 2023</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-clock me-1 text-muted"></i>
+                                        <span class="text-muted">3:45</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i> Add to Playlist
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card song-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="badge bg-info">New</span>
+                                    <span class="playlist-count"><i class="fas fa-headphones me-1"></i> 152</span>
+                                </div>
+                                <h5 class="card-title">Anti-Hero</h5>
+                                <h6 class="card-subtitle mb-3 text-muted">Taylor Swift</h6>
+                                <p class="card-text text-muted">Midnights • 2022</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-clock me-1 text-muted"></i>
+                                        <span class="text-muted">3:32</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i> Add to Playlist
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="section-title mt-5">All Songs</h3>
+                <div class="list-group">
+                    <!-- Song List -->
+                    <div class="list-group-item song-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="https://via.placeholder.com/50" class="rounded me-3" alt="Song cover">
+                                <div>
+                                    <h6 class="mb-0">Save Your Tears</h6>
+                                    <small class="text-muted">The Weeknd</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-3">3:35</span>
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i> Add to Playlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item song-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="https://via.placeholder.com/50" class="rounded me-3" alt="Song cover">
+                                <div>
+                                    <h6 class="mb-0">As It Was</h6>
+                                    <small class="text-muted">Harry Styles</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-3">2:47</span>
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i> Add to Playlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item song-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="https://via.placeholder.com/50" class="rounded me-3" alt="Song cover">
+                                <div>
+                                    <h6 class="mb-0">Easy On Me</h6>
+                                    <small class="text-muted">Adele</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-3">3:44</span>
+                                <button class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i> Add to Playlist
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <!-- Playlist Tab -->
+            <div class="tab-pane fade" id="playlist" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">My Playlist</h3>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <span class="badge bg-primary rounded-pill">5 songs</span>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash me-1"></i> Clear Playlist
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> You can add up to 10 songs to your playlist.
+                </div>
+                
+                <div class="list-group">
+                    <div class="list-group-item song-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="https://via.placeholder.com/50" class="rounded me-3" alt="Song cover">
+                                <div>
+                                    <h6 class="mb-0">Blinding Lights</h6>
+                                    <small class="text-muted">The Weeknd</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-3">3:20</span>
+                                <button class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-times me-1"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item song-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <img src="https://via.placeholder.com/50" class="rounded me-3" alt="Song cover">
+                                <div>
+                                    <h6 class="mb-0">Flowers</h6>
+                                    <small class="text-muted">Miley Cyrus</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="text-muted me-3">3:45</span>
+                                <button class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-times me-1"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h4 class="section-title">Popular with Other Users</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">Save Your Tears</h6>
+                                            <small class="text-muted">The Weeknd</small>
+                                        </div>
+                                        <span class="badge bg-primary">Added 142 times</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-0">As It Was</h6>
+                                            <small class="text-muted">Harry Styles</small>
+                                        </div>
+                                        <span class="badge bg-primary">Added 128 times</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Tab -->
+            <div class="tab-pane fade" id="profile" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="user-profile text-center">
+                            <img src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="Profile picture">
+                            <h4> harvey </h4>
+                            <p class="mb-2"><i class="fas fa-envelope me-2"></i> ur.bbyharvey@gmail.com</p>
+                            <p><i class="fas fa-music me-2"></i> 5 songs in playlist</p>
+                            <div class="progress mb-3" style="height: 8px;">
+                                <div class="progress-bar" style="width: 50%;"></div>
+                            </div>
+                            <small>50% of playlist capacity (5/10)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h4 class="section-title">Update Profile</h4>
+                        <form>
+                            <input type="hidden" id="userId" value="12345">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" value="ur.bbyharvey">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="email" value="ur.bbyharvey@gmail.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">Bio</label>
+                                <textarea class="form-control" id="bio" rows="3">Music enthusiast who loves pop and rock</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-music me-2"></i>MelodyMingle</h5>
+                    <p>Your favorite music catalog and playlist manager</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Home</a></li>
+                        <li><a href="#" class="text-white">Discover</a></li>
+                        <li><a href="#" class="text-white">Popular Songs</a></li>
+                        <li><a href="#" class="text-white">My Account</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Connect With Us</h5>
+                    <div class="d-flex">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-spotify fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <p class="text-center mb-0">© 2023 MelodyMingle. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to show notification
+        function showNotification() {
+            const notification = document.querySelector('.notification');
+            notification.classList.add('show');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Simulate adding a song to playlist
+        document.querySelectorAll('.btn-primary').forEach(button => {
+            if (button.textContent.includes('Add to Playlist')) {
+                button.addEventListener('click', function() {
+                    showNotification();
+                });
+            }
+        });
+        
+        // Simulate login functionality
+        document.querySelector('.dropdown-item.text-danger').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Logout successful!');
+        });
+    </script>
+</body>
+</html>
